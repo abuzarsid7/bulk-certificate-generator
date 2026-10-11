@@ -12,6 +12,7 @@ class CertificateStatus(str, enum.Enum):
     PENDING = "pending"
     PROCESSING = "processing"
     SUCCESS = "success"
+    COMPLETED = "success"
     FAILED = "failed"
 
 

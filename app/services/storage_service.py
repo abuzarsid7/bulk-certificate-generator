@@ -28,3 +28,19 @@ class StorageService:
 
     def get_absolute_path(self, relative_path: str) -> Path:
         return self.base_dir / relative_path
+
+    def resolve_safe_path(self, relative_path: str) -> Path:
+        """
+        Resolves a relative path against the configured storage directory,
+        guaranteeing that path traversal outside the storage root is rejected.
+        """
+        base = self.base_dir.resolve()
+        target = (self.base_dir / relative_path).resolve()
+        if not target.is_relative_to(base):
+            raise ValueError("Path traversal attempt detected")
+        return target
+
+
+def get_storage_service() -> StorageService:
+    return StorageService()
+
