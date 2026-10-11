@@ -24,5 +24,7 @@ class JobOut(BaseModel):
     issue_date: date
     status: JobStatus
     total_count: int
+    success_count: int = 0
+    failure_count: int = 0
     created_at: datetime
     completed_at: datetime | None = None

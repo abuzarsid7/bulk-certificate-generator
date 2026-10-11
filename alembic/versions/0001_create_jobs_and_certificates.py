@@ -27,20 +27,25 @@ def upgrade() -> None:
             sa.Enum(*JOB_STATUSES, name="jobstatus", native_enum=False, length=32),
             nullable=False,
         ),
-        sa.Column("total_count", sa.Integer(), nullable=False),
+        sa.Column("total_count", sa.Integer(), nullable=False, server_default="0"),
+        sa.Column("success_count", sa.Integer(), nullable=False, server_default="0"),
+        sa.Column("failure_count", sa.Integer(), nullable=False, server_default="0"),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.Column("completed_at", sa.DateTime(timezone=True)),
         sa.CheckConstraint("total_count >= 0", name="ck_jobs_total_nonneg"),
+        sa.CheckConstraint("success_count >= 0", name="ck_jobs_success_nonneg"),
+        sa.CheckConstraint("failure_count >= 0", name="ck_jobs_failure_nonneg"),
     )
     op.create_index("ix_jobs_status", "jobs", ["status"])
+    op.create_index("ix_jobs_created_at", "jobs", ["created_at"])
 
     op.create_table(
         "certificates",
         sa.Column("id", sa.Uuid(), primary_key=True),
         sa.Column("job_id", sa.Uuid(), sa.ForeignKey("jobs.id", ondelete="CASCADE"), nullable=False),
         sa.Column("recipient_name", sa.String(255), nullable=False),
-        sa.Column("recipient_email", sa.String(255), nullable=False),
+        sa.Column("recipient_email", sa.String(255), nullable=True),
         sa.Column(
             "status",
             sa.Enum(*CERT_STATUSES, name="certificatestatus", native_enum=False, length=32),
@@ -49,13 +54,17 @@ def upgrade() -> None:
         sa.Column("file_path", sa.String(512)),
         sa.Column("error_message", sa.Text()),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.Column("generated_at", sa.DateTime(timezone=True)),
     )
+    op.create_index("ix_certificates_job_id", "certificates", ["job_id"])
     op.create_index("ix_certificates_job_status", "certificates", ["job_id", "status"])
 
 
 def downgrade() -> None:
     op.drop_index("ix_certificates_job_status", table_name="certificates")
+    op.drop_index("ix_certificates_job_id", table_name="certificates")
     op.drop_table("certificates")
+    op.drop_index("ix_jobs_created_at", table_name="jobs")
     op.drop_index("ix_jobs_status", table_name="jobs")
     op.drop_table("jobs")
