@@ -16,4 +16,9 @@ def create_generation_job(
 ) -> JobCreateResponse:
     job = create_job(db, payload)
     response.headers["Location"] = f"/api/v1/jobs/{job.id}"
+    try:
+        from app.workers.tasks import process_certificate_job
+        process_certificate_job.delay(str(job.id))
+    except Exception:
+        pass
     return job

@@ -23,7 +23,7 @@ def test_unknown_job_route_is_404(client):
     assert client.get("/api/v1/jobs/does-not-exist").status_code == 404
 
 
-def test_create_job_success(client, db_session):
+def test_create_job_success(client, db_session, mock_celery_delay):
     payload = {
         "event_name": "Cloud Architecture Workshop",
         "issue_date": "2026-10-15",
@@ -45,6 +45,10 @@ def test_create_job_success(client, db_session):
     assert data["total_count"] == 3
     assert data["event_name"] == "Cloud Architecture Workshop"
     assert response.headers.get("Location") == f"/api/v1/jobs/{job_id}"
+
+    # Verify background Celery task was enqueued with job_id
+    assert mock_celery_delay.called
+    assert mock_celery_delay.call_args[0][0] == job_id
 
     # Verify Job record in database
     db_job = db_session.get(Job, uuid.UUID(job_id))

@@ -39,3 +39,12 @@ def client(db_session: Session):
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()
+
+
+@pytest.fixture(autouse=True)
+def mock_celery_delay(monkeypatch):
+    from unittest.mock import MagicMock
+    from app.workers.tasks import process_certificate_job
+    mock_delay = MagicMock()
+    monkeypatch.setattr(process_certificate_job, "delay", mock_delay)
+    return mock_delay
