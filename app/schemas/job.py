@@ -16,10 +16,23 @@ class JobCreate(BaseModel):
     )
 
 
+class JobCreateResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    job_id: uuid.UUID
+    id: uuid.UUID
+    event_name: str
+    issue_date: date
+    status: JobStatus
+    total_count: int
+    created_at: datetime
+
+
 class JobOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
+    job_id: uuid.UUID | None = None
     event_name: str
     issue_date: date
     status: JobStatus

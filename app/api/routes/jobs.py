@@ -1,5 +1,19 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, Response, status
+from sqlalchemy.orm import Session
+
+from app.core.database import get_db
+from app.schemas.job import JobCreate, JobCreateResponse
+from app.services.job_service import create_job
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
 
-# Endpoints are added in later steps (create job, status, list certificates, download).
+
+@router.post("", response_model=JobCreateResponse, status_code=status.HTTP_202_ACCEPTED)
+def create_generation_job(
+    payload: JobCreate,
+    response: Response,
+    db: Session = Depends(get_db),
+) -> JobCreateResponse:
+    job = create_job(db, payload)
+    response.headers["Location"] = f"/api/v1/jobs/{job.id}"
+    return job

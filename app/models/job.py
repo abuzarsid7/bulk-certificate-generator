@@ -45,3 +45,7 @@ class Job(Base):
     certificates: Mapped[list["Certificate"]] = relationship(  # noqa: F821
         back_populates="job", cascade="all, delete-orphan", passive_deletes=True
     )
+
+    @property
+    def job_id(self) -> uuid.UUID:
+        return self.id
